@@ -1,0 +1,2 @@
+module apps.calendar
+CalendarApp 1.0 CalendarApp.qml

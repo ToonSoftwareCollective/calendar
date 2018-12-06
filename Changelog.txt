@@ -1,0 +1,40 @@
+1.0.7
+- one bug fix with full-day events which are shown 24h too long on screen
+
+1.0.6
+- the time shift bug has been solved for recurring appointments
+- recurring item tag "COUNT" is now implemented, when the last of the series is in the past, the item will not be shown anymore
+- recurring item tag "INTERVAL" is now implemented, used to repeat an appointment every 4 weeks, or every 2 months etc
+- weekly recurring item with specifc days is now implemented, like repeat every workday
+  (combination of repeat WEEKLY and a list of days like MO TU WE TH FR)
+
+1.0.5
+- removed re-writing of userSettings.json by the app
+- various bug fixes
+- expanded support for recuring items (now supports YEARLY, MONTHLY, WEEKLY, DAILY and the UNTIL tags)
+  not yet supported recurring tags: INTERVAL (e.q. every two weeks) and COUNT (repeat x times)
+  still some other issues to resolve with recurring items but this version is already much better then 1.0.3
+- added support for iCloud calendars (beta, but seems ok, needs more thorough testing)
+- recurring items are preceded by '(*)' for now, need something nicer in the future
+
+
+1.0.3
+- rewritten the core engine (3 times as fast now). No delays anymore during boot of Toon 1
+  Calenders start getting retrieved 2,5 minutes after finishing the start of the calendar app
+  to allow the boot process of Toon 1 to finish
+- the first occurence of simple recurring items are now shown for appointments which repeat weekly or yearly.
+  (more complex recurrences like repeat weekly on Mon and Thu and Fri are not yet supported) 
+
+1.0.2
+- added issuing a notification according to the reminder setting in the appointments
+- added a config screen to be able to disable the notifications :-)
+- if the userSettings.json file doesn't exists, a default one is created with the NL holidays calendar
+- appointments in the past are not processed at all anymore
+
+1.0.1
+- prevented long calendar event titles would go across the tile boundaries 
+- sometimes appointment dates were corrupted
+- some calendars start with summer time events, creating a few fake entries on Toon. I am skipping these now.
+
+1.0.0
+- initial release to show your google calendar entries
