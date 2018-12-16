@@ -45,7 +45,7 @@ App {
 
 	FileIO {
 		id: userSettingsFile
-		source: "/qmf/qml/apps/calendar/userSettings.json"
+		source: "file:///qmf/qml/apps/calendar/userSettings.json"
  	}
 
 	function init() {
