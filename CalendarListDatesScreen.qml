@@ -7,6 +7,34 @@ Screen {
 
 	onShown: {
 		addCustomTopRightButton("Instellingen");
+
+			// populate gridview first page
+
+			navigatePage(0);
+	}
+
+	function navigatePage(page) {
+
+		var startItem = (page * 16) + 1;
+		calendarModel.clear();					// clear datamodel
+		var tmp = app.calendarDatesString.split("\n");		
+		var tmpAppointmentTime	= "";
+		var counter = 0;
+		for (var i = startItem; i < tmp.length; i++) {
+
+			if (tmp[i].length > 20) {
+				if ((tmp[i].slice(11, 16) == "00:00") && (tmp[i].slice(30, 35) == "23:59")) { //all day event
+					tmpAppointmentTime= " ";
+				} else {
+					tmpAppointmentTime= tmp[i].slice(11, 16) + " - " + tmp[i].slice(30, 35);
+				}
+				calendarModel.append({appointmentDate: tmp[i].slice(0, 10), appointmentTitle: tmp[i].slice(57,tmp[i].length-1), appointmentColor: app.colorCodes(tmp[i].slice(56,57)), appointmentTime: tmpAppointmentTime});
+				counter = counter +1;
+				if (counter == 16) i = tmp.length;		//end loop, max 16 items per page
+			}
+		}
+		widgetNavBar.pageCount = Math.ceil (tmp.length / 16);
+		
 	}
 
 	onCustomButtonClicked: {
@@ -15,62 +43,68 @@ Screen {
 		}
 	}
 
-//	onCustomButtonClicked: {
-//		app.startOrRefresh();
-//		hide();
-//	}
-
 	hasBackButton : true
 
+
 	Rectangle {
-		id: backgroundRect
-		height: isNxt ? 500 : 388
-		width: isNxt ? 900 : 700
+		id: gridBack
+		height: isNxt ? 480 : 384
+		width: isNxt ? 984 : 760
 		anchors {
-			baseline: parent.top
-			baselineOffset: isNxt ? 13 : 10
+			top: parent.top
+			topMargin: isNxt ? 45 : 36
 			left: parent.left
-			leftMargin: 50
+			leftMargin: 20
 		}
-		color: colors.contrastBackground
+       		visible: true
+	}
 
-	       Flickable {
-	            id: flickArea
-	             anchors.fill: parent
-	             contentWidth: backgroundRect.width / 2;
-			contentHeight: backgroundRect.height
-	             flickableDirection: Flickable.VerticalFlick
-	             clip: true
+	GridView {
+		id: calendarListView
 
-	            
-		 TextEdit{
-	                  id: forecastText
-	                   wrapMode: TextEdit.Wrap
-	                   width:backgroundRect.width
-	                   readOnly:true
-			  color: colors.taWarningBox
+		model: 	calendarModel
+		delegate: CalendarListDatesScreenDelegate {}
+		cellWidth: gridBack.width / 2
+		cellHeight: isNxt ? 60 : 48
 
-				font {
-					family: qfont.bold.name
-					pixelSize: isNxt ? 20 : 16
-				}
+		interactive: false
+		flow: GridView.TopToBottom
 
-	                   text:  app.calendarListDates
-	            }
-	      }
+		anchors {
+			fill: gridBack
+		}
+	}
+
+	ListModel {
+		id: calendarModel
 	}
 
 	StandardButton {
 		id: btnRefreshCalendars
 		width: isNxt ? 125 : 100
 		text: "Verversen"
-		anchors.right: backgroundRect.right
-		anchors.top: backgroundRect.top
+		anchors.right: gridBack.right
+		anchors.bottom: gridBack.top
+		anchors.bottomMargin: 5
 		leftClickMargin: 3
 		bottomClickMargin: 5
 		onClicked: {
+			hide();
 			app.startOrRefresh();
 		}
+	}
+
+	DottedSelector {
+		id: widgetNavBar
+		width: isNxt ? 625 : 500
+		anchors {
+			horizontalCenter: parent.horizontalCenter
+			bottom: gridBack.top
+		}
+		maxPageCount: 14
+		pageCount: 1
+//		shadowBarButtons: true
+		onNavigate: navigatePage(page)
 	}
 
 }

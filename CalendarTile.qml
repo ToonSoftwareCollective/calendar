@@ -31,6 +31,48 @@ Tile {
        		visible: !dimState
 	}
 
+	Rectangle {
+		id: colorBar1
+		height: isNxt ? 40 : 32
+		width: isNxt ? 8 : 6
+		color: app.calendarDate1Color
+		anchors {
+			top: calendardatenext.top
+			topMargin: 5
+			left: parent.left
+			leftMargin: isNxt ? calendardatenext.left - 12 : calendardatenext.left - 10
+		}
+       		visible: !dimState && (app.showColorsSetting == "Yes")
+	}
+
+	Rectangle {
+		id: colorBar2
+		height: isNxt ? 40 : 32
+		width: isNxt ? 8 : 6
+		color: app.calendarDate2Color
+		anchors {
+			top: calendardatenext2.top
+			topMargin: 5
+			left: parent.left
+			leftMargin: isNxt ? calendardatenext2.left - 12 : calendardatenext2.left - 10
+		}
+       		visible: !dimState && (app.showColorsSetting == "Yes")
+	}
+
+	Rectangle {
+		id: colorBar3
+		height: isNxt ? 40 : 32
+		width: isNxt ? 8 : 6
+		color: app.calendarDate3Color
+		anchors {
+			top: calendardatenext3.top
+			topMargin: 5
+			left: parent.left
+			leftMargin: isNxt ? calendardatenext3.left - 12 : calendardatenext3.left - 10
+		}
+       		visible: !dimState && (app.showColorsSetting == "Yes")
+	}
+
 	Text {
 		id: calendardatenext
 		text: app.calendarDateNext1Label
@@ -77,7 +119,7 @@ Tile {
 			pixelSize: isNxt ? 22 : 18
 		}
 		color: colors.waTileTextColor
-       	visible: !dimState
+       		visible: !dimState
 	}
 
 	Text {
@@ -130,9 +172,9 @@ Tile {
 
 // DIM state fields
 
-	Text {
-		id: calendardatenextDimDate
-		text: app.calendarDateNext1DateDim
+	 Text {
+		id: calendardatenextDimText
+ 		text: app.calendarDateNext1LabelDim
 		anchors {
 			baseline: parent.top
 			baselineOffset: isNxt ? 62 : 50
@@ -146,12 +188,12 @@ Tile {
        		visible: dimState
 	}
 
-	 Text {
-		id: calendardatenextDimText
- 		text: app.calendarDateNext1LabelDim
+	Text {
+		id: calendardatenextDimDate
+		text: app.calendarDateNext1DateDim
 		anchors {
-			baseline: calendardatenextDimDate.bottom
-			baselineOffset: isNxt ? 25 : 20
+			baseline: calendardatenextDimText.bottom
+			baselineOffset: isNxt ? 50 : 40
 			horizontalCenter: parent.horizontalCenter
 		}
 		font {
@@ -166,7 +208,7 @@ Tile {
 		id: calendardatenexttypeDimTime
 		text:  app.calendarDateNext1Time
 		anchors {
-			baseline: calendardatenextDimText.bottom
+			baseline: calendardatenextDimDate.bottom
 			baselineOffset: isNxt ? 25 : 20
 			horizontalCenter: parent.horizontalCenter
 		}

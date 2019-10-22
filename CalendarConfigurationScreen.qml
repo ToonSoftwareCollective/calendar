@@ -5,19 +5,19 @@ import BxtClient 1.0
 Screen {
 	id: wasteConfigurationScreen
 
-
-	function showDialogWasteCollection() {
-		if (!app.dialogShown) {
-			qdialog.showDialog(qdialog.SizeLarge, "Afvalkalender mededeling", "Wijzigingen worden pas actief als U op de knop 'Opslaan' heeft gedrukt, rechtsboven op het scherm.\nDe tegel zal na 5-10 seconden worden ververst met de nieuwe informatie." , "Sluiten");
-			app.dialogShown = true;
-		}
-	}
-
 	screenTitle: "Kalender configuratie"
 
 	onShown: {
 		addCustomTopRightButton("Opslaan");
 		enableNotificationsToggle.isSwitchedOn = (app.showNotificationSetting == "Yes");
+		enableColorsToggle.isSwitchedOn = (app.showColorsSetting == "Yes");
+		urlModel.clear();
+
+		for (var i = 0; i < app.calendarSettingsJson['Calendar_URL'].length; i++) {
+			var colorStr = i.toString();
+			if (i > 9) colorStr = "9";
+			urlModel.append({urlName: app.calendarSettingsJson['Calendar_URL'][i], urlColor: app.colorCodes(colorStr)});
+		}
 	}
 
 	onCustomButtonClicked: {
@@ -37,8 +37,8 @@ Screen {
 			topMargin : 30
 		}
 		font {
-			family: qfont.bold.name
-			pixelSize: isNxt ? 30 : 24
+			family: qfont.regular.name
+			pixelSize: isNxt ? 25 : 20
 		}
 	}
 
@@ -56,5 +56,84 @@ Screen {
 				app.showNotificationSetting = "No"
 			}
 		}
+	}
+
+	Text {
+		id: enableColorsLabel
+		width: isNxt ? 750 : 600
+		height: isNxt ? 44 : 35
+		text: "Kleuren per kalender weergeven bij afspraken?"
+		anchors {
+			left: enableNotificationsLabel.left
+			top: enableNotificationsLabel.bottom
+			topMargin : 30
+		}
+		font {
+			family: qfont.regular.name
+			pixelSize: isNxt ? 25 : 20
+		}
+	}
+
+	OnOffToggle {
+		id: enableColorsToggle
+		height: isNxt ? 45 : 36
+		anchors.left: enableNotificationsLabel.right
+		anchors.leftMargin: 10
+		anchors.top: enableColorsLabel.top
+		leftIsSwitchedOn: false
+		onSelectedChangedByUser: {
+			if (isSwitchedOn) {
+				app.showColorsSetting = "Yes"
+			} else {
+				app.showColorsSetting = "No"
+			}
+		}
+	}
+
+	Text {
+		id: urlListLabel
+		text: "Ingelezen kalenders:"
+		anchors {
+			left: enableColorsLabel.left
+			top: enableColorsLabel.bottom
+			topMargin : 30
+		}
+		font {
+			family: qfont.regular.name
+			pixelSize: isNxt ? 25 : 20
+		}
+	}
+
+	Rectangle {
+		id: gridBack
+		height: isNxt ? 375 : 300
+		width: isNxt ? 1024 : 800
+		color: colors.canvas
+		anchors {
+			top: urlListLabel.bottom
+			topMargin: 20
+			left: urlListLabel.left
+		}
+       		visible: true
+	}
+
+	GridView {
+		id: urlListGridView
+
+		model: urlModel
+		delegate: CalendarConfigurationScreenDelegate {}
+		cellWidth: gridBack.width
+		cellHeight: isNxt ? 35 : 28
+
+		interactive: false
+		flow: GridView.TopToBottom
+
+		anchors {
+			fill: gridBack
+		}
+	}
+
+	ListModel {
+		id: urlModel
 	}
 }

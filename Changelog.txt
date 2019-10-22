@@ -1,3 +1,31 @@
+1.1.4
+-firmware 5.2 compatibilty
+
+1.1.3
+- now supporting Microsoft Office365 Outlook ics files
+- now processing UNTIL entries without timestamp correctly
+- significantly increased performance of handling expired recurring items
+
+1.0.11
+- when the end ddate is missing it will be the same as the start date (might change to blank in the future)
+
+1.0.10
+- date of the first appointment on the tile in dim state now shows as 'vandaag', 'morgen' and
+  'overmorgen' for the coming three days.
+- Later dates are now formatted as "Ma 18 december" on the tile in dim state
+- cosmetic redesign on the tile in dim state
+
+1.0.9
+- bugfix: error message regarding reading the settings file showed too often
+
+1.0.8
+- added colors for each appointment to identify the source calendar
+- configuration screen now shows all source calendars plus associated color
+- display of colors can be switched on/off in the configuration screen
+- the full screen with appointments is now scrollable
+  from recurring items only the first next occurrence is shown for the time being.
+
+
 1.0.7
 - one bug fix with full-day events which are shown 24h too long on screen
 

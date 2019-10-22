@@ -28,6 +28,10 @@ App {
 	property string calendarDateNext2Time
 	property string calendarDateNext3Label
 	property string calendarDateNext3Time
+	property string calendarDate1Color
+	property string calendarDate2Color
+	property string calendarDate3Color
+
 
 	// other variables
 
@@ -37,8 +41,10 @@ App {
 	property string calendarListDates		// all upcoming meetings in one text block
 	property bool showNotification			// is there a notification to show
 	property string showNotificationSetting : "Yes"	// parameters from the userSettings.json file
+	property string showColorsSetting : "Yes"	// parameters from the userSettings.json file
 	property variant calendarSettingsJson : {
 		'ShowNotifications': "Yes",
+		'ShowColors': "Yes",
 		'Calendar_URL': []
 	}
 	property int numberOfCalendersToRead		// to keep track whether I am done with processing of the last calender
@@ -52,13 +58,14 @@ App {
 		registry.registerWidget("tile", tileUrl, this, null, {thumbLabel: "Kalender", thumbIcon: thumbnailIcon, thumbCategory: "general", thumbWeight: 30, baseTileWeight: 10, thumbIconVAlignment: "center"});
 		registry.registerWidget("screen", calendarListDatesScreenUrl, this, "calendarListDatesScreen");
 		registry.registerWidget("screen", calendarConfigurationScreenUrl, this, "calendarConfigurationScreen");
-		notifications.registerType("kalender", notifications.prio_HIGHEST, Qt.resolvedUrl("drawables/notification-update.svg"), calendarListDatesScreenUrl , {"categoryUrl": calendarListDatesScreenUrl }, "Kalender notificaties");
+		notifications.registerType("kalender", notifications.prio_HIGHEST, Qt.resolvedUrl("./drawables/notification-update.svg"), calendarListDatesScreenUrl , {"categoryUrl": calendarListDatesScreenUrl }, "Kalender notificaties");
 		notifications.registerSubtype("kalender", "herinnering", calendarListDatesScreenUrl , {"categoryUrl": calendarListDatesScreenUrl });
 	}
 
 	Component.onCompleted: {
 		endFirstAppointmentTimer.start();	// kickoff timer for the first processing (delayed start of the app to allow Toon's to complete the boot process)
-		var now = new Date();
+		midnightTimer.interval = getMSecTill12oclock();
+		midnightTimer.start();
 	}
 
 	function sendNotification() {
@@ -96,6 +103,7 @@ App {
 	function saveSettings() {				// writes back userSettings.json withthe new shownotifcation setting (URL's are untouched)
  		var tmpcalendarSettingsJson = {
 			"ShowNotifications" : showNotificationSetting,
+			"ShowColors" : showColorsSetting,
 			"Calendar_URL" : calendarSettingsJson['Calendar_URL']
 		}
   		var doc3 = new XMLHttpRequest();
@@ -115,8 +123,8 @@ App {
 		try {
 			calendarSettingsJson = JSON.parse(userSettingsFile.read());
 			showNotificationSetting = calendarSettingsJson['ShowNotifications'];
+			showColorsSetting = calendarSettingsJson['ShowColors'];
 		} catch(e) {
-			qdialog.showDialog(qdialog.SizeLarge, "Kalender mededeling", "Er is een fout opgetreden bij het lezen van de file /qmf/qml/apps/calendar/userSettings.json" , "Sluiten");
 		}
 
 		// clear tile labels
@@ -136,11 +144,14 @@ App {
 
 		numberOfCalendersToRead = calendarSettingsJson['Calendar_URL'].length
 		for (var i = 0; i < calendarSettingsJson['Calendar_URL'].length; i++) {
-			readGoogleCalendar(calendarSettingsJson['Calendar_URL'][i]);
+			readGoogleCalendar(calendarSettingsJson['Calendar_URL'][i],i);
 		}
 	}
 
-	function readGoogleCalendar(calendarURL) {		// function to read a single ICS calendar file
+	function readGoogleCalendar(calendarURL, indexCal) {		// function to read a single ICS calendar file
+
+		// console message
+		console.log ("********** reading calendar " + indexCal + "-" + calendarURL);
 
 		// bunch of meaningless counters
 
@@ -164,6 +175,8 @@ App {
 		var googleDates = [];
 		var triggerTxt = "";
 		var recurrenceTxt = "";
+		var recurrenceFlagScr = "";
+
 		var correctionUTC = "0";
 
 		var toDayStr = nowFormatted();		// calculate yyyy-mm-ddThh:mm for now() to filter out old entries later on
@@ -181,17 +194,21 @@ App {
 
 				if ( i > 0 ) {					
 					while (i > 0) {				// loop through all appointments int he ICS file
-
+				
 							// index this event
 
-						jj= aNode.indexOf("DTEND", i);		
-						j = aNode.indexOf(":", jj);		// find end date of appoitment
 						k = aNode.indexOf("SUMMARY", j);	// appointment title
+						m = aNode.indexOf("END:VEVENT", j);	// last line of this appoitmment
+						n = aNode.indexOf("BEGIN:VALARM", j);	// find reminder setting (n must be lower then m to be valid)
+						p = aNode.indexOf("RRULE", j);		// find recurrence setting (p must be lower then m to be valid)
+						jj= aNode.indexOf("DTEND", j);		
+						j = aNode.indexOf(":", jj);		// find end date of appoitment
 						l = aNode.indexOf("\n", k);		// end of title
-						m = aNode.indexOf("END:VEVENT", i);	// last line of this appoitmment
-						n = aNode.indexOf("BEGIN:VALARM", i);	// find reminder setting (n must be lower then m to be valid)
-						p = aNode.indexOf("RRULE", i);		// find recurrence setting (p must be lower then m to be valid)
 
+							// enddate =  startdate if not end date is specified
+
+						if ((jj < 0) || (jj > m)) { j = i + 0};
+							
 							// extract reminder data from ICS file (many dfferent formats possible, only supporting the ones with a relative time to the start date of the appointment)
 							// currently want triggerTxt to have a length of 15 (needed for extracting data on the screen, will be obsolete after the full rewrite of the screen
 
@@ -207,10 +224,16 @@ App {
 							// extract recurrence data from ICS file
 
 						recurrenceTxt = "NONE";
+						recurrenceFlagScr = "";
 						if ((p > 0) && (p < m)) {
 							q = aNode.indexOf("\n", p)
 							if ((q > 0) && (q < m)) {		// recurrence string
-								recurrenceTxt = aNode.substring(p+6, q-1);
+								recurrenceTxt = aNode.substring(p+6, q);
+								recurrenceFlagScr = "(*)";
+								if (recurrenceTxt.indexOf("FREQ=YEARLY") > -1) recurrenceFlagScr = "(j)";
+								if (recurrenceTxt.indexOf("FREQ=WEEKLY") > -1) recurrenceFlagScr = "(w)";
+								if (recurrenceTxt.indexOf("FREQ=MONTHLY") > -1) recurrenceFlagScr = "(m)";
+								if (recurrenceTxt.indexOf("FREQ=DAILY") > -1) recurrenceFlagScr = "(d)";
 							}
 						}
 
@@ -234,11 +257,14 @@ App {
 
 							// only store in the array if end date of appointment is in the future, add (*) for recurring items to the title
 
+						var colorStr = indexCal.toString().substring(0,1);
+						if (indexCal > 9) colorStr = "9";
+
 						if (toDayStr < dateTo) {
 							if (recurrenceTxt == "NONE") {
-								googleDates.push(dateFrom + " - " + dateTo + " - " + triggerTxt + " - " + aNode.substring(k+8, l));
+								googleDates.push(dateFrom + " - " + dateTo + " - " + triggerTxt + " - " + colorStr + aNode.substring(k+8, l));
 							} else {
-								googleDates.push(dateFrom + " - " + dateTo + " - " + triggerTxt + " - (*) " + aNode.substring(k+8, l));
+								googleDates.push(dateFrom + " - " + dateTo + " - " + triggerTxt + " - " + colorStr + recurrenceFlagScr + aNode.substring(k+8, l));
 							}
 						}
 
@@ -291,17 +317,30 @@ App {
 			default: break;
 		}
 	}
+	
+	function colorCodes(colorStr) {
+		switch (colorStr) {
+			case "0": return "#FF0000";
+			case "1": return "#00FF00";
+			case "2": return "#0000FF";
+			case "3": return "#FFFF00";
+			case "4": return "#00FFFF";
+			case "5": return "#FF00FF";
+			case "6": return "#008000";
+			case "7": return "#000080";
+			case "8": return "#800000";
+			case "9": return "#800080";
+			default: break;
+		}
+	}
 
 
 	function convertDateToLocale(strYear, strMonth, strDay, strHour, strMinutes, recurrenceTxt, correctionUTC) {
 
 		var dateLocal = new Date(strYear, parseInt(strMonth, 10) - 1, strDay, strHour, strMinutes, 0);
-//	var timezoneOffset = dateLocal.getTimezoneOffset();
 
-		console.log("********** datelocal/input:" + dateLocal + "/" + strYear + strMonth + strDay + strHour + strMinutes + correctionUTC + recurrenceTxt);
 		if (correctionUTC == "1") {
 			dateLocal.setMinutes(dateLocal.getMinutes() - dateLocal.getTimezoneOffset());
-			console.log("********** datelocal corr:" + dateLocal);
 		}
 
 		var now = new Date();
@@ -313,6 +352,20 @@ App {
 		var recBydayList = [];			//list of days in the week to repeat in WEEKLY recurring items
 		var recByday = false;			//flag for list of days in the week to repeat in WEEKLY recurring items
 		var recBydaySource = "";
+
+		i = recurrenceTxt.indexOf("UNTIL=");
+
+		if (i > -1) {
+			if ((recurrenceTxt.substring(i+15, i+19) >= "0000") && (recurrenceTxt.substring(i+15, i+19) <= "9999")) {
+				var dateUntil = new Date(Date.UTC(recurrenceTxt.substring(i+6, i+10), recurrenceTxt.substring(i+10, i+12) - 1, recurrenceTxt.substring(i+12, i+14), recurrenceTxt.substring(i+15, i+17), recurrenceTxt.substring(i+17, i+19), 0));
+			} else {
+				var dateUntil = new Date(Date.UTC(recurrenceTxt.substring(i+6, i+10), recurrenceTxt.substring(i+10, i+12) - 1, recurrenceTxt.substring(i+12, i+14), 0, 0, 0));
+			}
+
+			if (dateUntil < now) {
+				return ("1900-01-01T01:01");	// expired entry, stop processing
+			}
+		}
 
 		// extract COUNTER value from the recurrence string if existing
 
@@ -382,20 +435,17 @@ App {
 		}
 
 		// apply weekly recurring setting (take into account the INTERVAL and COUNT tags)
-		// keep adding 7 days until date is in the future (todo :or max counter has been reached)
+		// keep adding 7 days until date is in the future
 
 		i = recurrenceTxt.indexOf("FREQ=WEEKLY");
 
 		if (i > -1 ) {
-
-			console.log("******** recByday:" + recByday);
 
 			if (recByday) {			// if BYDAY tag is used, skip to first day specified						
 
 				if ((recByday) && (recBydayList.length > 0)) {
 					while ((recBydayList.indexOf(dateLocal.getDay()) < 0) || (now > dateLocal)) {
 						dateLocal.setDate(dateLocal.getDate() + 1);
-						console.log("******** add day:" + dateLocal);
 					}						
 				}
 
@@ -404,12 +454,10 @@ App {
 
 					for (var j = 0; j < recInterval; j++) {
 						dateLocal.setDate(dateLocal.getDate() + 7);
-						console.log("********* recurring skip: " + j + "/" + dateLocal);
 					}
 					recCounter = recCounter - 1;
 				}
 			}
-			console.log("********* recurring skip end: " + dateLocal);
 		}
 
 		// apply monthly recurring setting (take into account the INTERVAL and COUNT tags)
@@ -465,9 +513,10 @@ App {
 		i = recurrenceTxt.indexOf("UNTIL=");
 
 		if (i > -1) {
-			var dateUntil = new Date(Date.UTC(recurrenceTxt.substring(i+6, i+10), recurrenceTxt.substring(i+10, i+12) - 1, recurrenceTxt.substring(i+12, i+14), recurrenceTxt.substring(i+15, i+17), recurrenceTxt.substring(i+17, i+19), 0));
-			if (dateUntil < now) {
-				return ("1900-01-01T01:01");
+			if ((recurrenceTxt.substring(i+15, i+19) >= "0000") && (recurrenceTxt.substring(i+15, i+19) <= "9999")) {
+				var dateUntil = new Date(Date.UTC(recurrenceTxt.substring(i+6, i+10), recurrenceTxt.substring(i+10, i+12) - 1, recurrenceTxt.substring(i+12, i+14), recurrenceTxt.substring(i+15, i+17), recurrenceTxt.substring(i+17, i+19), 0));
+			} else {
+				var dateUntil = new Date(Date.UTC(recurrenceTxt.substring(i+6, i+10), recurrenceTxt.substring(i+10, i+12) - 1, recurrenceTxt.substring(i+12, i+14), 0, 0, 0));
 			}
 			if (dateUntil < dateLocal) {
 				return ("1900-01-01T01:01");
@@ -475,8 +524,6 @@ App {
 		}
 
 		// return appointment date after applying the recurring settings
-
-		console.log("********** calculated date:" + dateLocal.getFullYear() + "-" + strMonNew + "-" + strDayNew + "T" + strHoursNew + ":" + strMinutesNew);
 
 		return (dateLocal.getFullYear() + "-" + strMonNew + "-" + strDayNew + "T" + strHoursNew + ":" + strMinutesNew);
 	}
@@ -534,8 +581,6 @@ App {
 
 		for (i = 0; i < response.length; i++) {
 
-			console.log("********** today check:" + toDayStr + "/" + response[i].slice(19, 35));
-
 			if ( toDayStr <= response[i].slice(19, 35) ) {   //skip passed entries
 
 					// check for earliest notification time and text to display
@@ -545,7 +590,7 @@ App {
 					thisOffset = endDate - nowDate + calcAlarmOffsetInMs(response[i].slice(38, 53)) - 3600000;
 					if ((thisOffset < offsetNoticationTimer) && (thisOffset > 0)) {
 						offsetNoticationTimer = thisOffset;
-						textNotification = response[i].slice(56,response[i].length-1);
+						textNotification = response[i].slice(57,response[i].length-1);
 						showNotification = true;
 					}
 				}
@@ -553,7 +598,8 @@ App {
 					calendarListDates = calendarListDates + addCalendarListEntry(response[i]);
 				}
 				if (counter == 2) {
-					calendarDateNext3Label = response[i].slice(8, 10) + "-" + response[i].slice(5, 7) + ": " + response[i].slice(56,response[i].length-1);
+					calendarDate3Color = colorCodes(response[i].slice(56,57));
+					calendarDateNext3Label = response[i].slice(8, 10) + "-" + response[i].slice(5, 7) + ": " + response[i].slice(57,response[i].length-1);
 					if ((response[i].slice(11, 16) == "00:00") && (response[i].slice(30, 35) == "23:59")) {
 						calendarDateNext3Time = " ";
 					} else {
@@ -561,7 +607,8 @@ App {
 					}
 				}
 				if (counter == 1) {
-					calendarDateNext2Label = response[i].slice(8, 10) + "-" + response[i].slice(5, 7) + ": " + response[i].slice(56,response[i].length-1);
+					calendarDate2Color = colorCodes(response[i].slice(56,57));
+					calendarDateNext2Label = response[i].slice(8, 10) + "-" + response[i].slice(5, 7) + ": " + response[i].slice(57,response[i].length-1);
 					if ((response[i].slice(11, 16) == "00:00") && (response[i].slice(30, 35) == "23:59")) {
 						calendarDateNext2Time = " ";
 					} else {
@@ -569,17 +616,19 @@ App {
 					}
 				}
 				if (counter == 0) {
-					calendarDateNext1Label = response[i].slice(8, 10) + "-" + response[i].slice(5, 7) + ": " + response[i].slice(56,response[i].length-1);
+					calendarDate1Color = colorCodes(response[i].slice(56,57));
+					calendarDateNext1Label = response[i].slice(8, 10) + "-" + response[i].slice(5, 7) + ": " + response[i].slice(57,response[i].length-1);
 					if ((response[i].slice(11, 16) == "00:00") && (response[i].slice(30, 35) == "23:59")) {
 						calendarDateNext1Time = " ";
 					} else {
 						calendarDateNext1Time = response[i].slice(11, 16) + " - " + response[i].slice(30, 35);
 					}
-					calendarDateNext1LabelDim = response[i].slice(56,response[i].length-1);
+					calendarDateNext1LabelDim = response[i].slice(57,response[i].length-1);
 					if (calendarDateNext1LabelDim .length > 20) {
 						calendarDateNext1LabelDim = calendarDateNext1LabelDim.slice(0,20) + "...";
 					}
-					calendarDateNext1DateDim = response[i].slice(8, 10) + " " + fullMonth(response[i].slice(5, 7));
+					calendarDateNext1DateDim = formatCalendarDateTile(response[i].slice(0, 10));
+
 					endDateFirstAppointment = response[i].slice(19,35);
 				}
 				counter = counter + 1;
@@ -625,6 +674,42 @@ App {
 		return "error_month";
 	}
 
+		// format dates as yyyy-mm-dd
+
+	function formatDate(date) {
+    		var d = new Date(date),
+        	month = '' + (d.getMonth() + 1),
+        	day = '' + d.getDate(),
+        	year = d.getFullYear();
+		if (month.length < 2) month = '0' + month;
+		if (day.length < 2) day = '0' + day;
+		return [year, month, day].join('-');
+	}
+
+		// display next appointment date as 'morgen', 'overmorgen' or 'vandaag' on the tile in dim state
+
+	function formatCalendarDateTile(dateyymmdd) {
+		var today = new Date();
+		var todayPlus1Date = new Date(today.getTime() + (24 * 60 * 60 * 1000));
+		var todayPlus2Date = new Date(today.getTime() + (48 * 60 * 60 * 1000));
+		var inputDate = new Date(dateyymmdd.slice(0,4), parseInt(dateyymmdd.slice(5,7), 10) - 1, dateyymmdd.slice(8,10), 11, 0, 0);
+
+		if (dateyymmdd == formatDate(today)) {
+			return "Vandaag";
+		} else {
+			if (dateyymmdd == formatDate(todayPlus1Date)) {
+				return "Morgen";
+			} else {
+				if (dateyymmdd == formatDate(todayPlus2Date)) {
+					return "Overmorgen";
+				} else {
+					return i18n.daysExtraShort[inputDate.getDay()] + " " + dateyymmdd.slice(8,10) + " " + fullMonth(dateyymmdd.slice(5,7));
+				}
+			}
+		}
+	}
+
+
 	/// calculates miliseconds till end date of next appointment (to refresh the tile and calendar file)
 
 	function getMSecTillEndTimeNextAppointment() {
@@ -638,6 +723,17 @@ App {
 		}
 	}
 
+		// calculates miliseconds till 00:00:02 to update date label on the tile in dim state
+
+	function getMSecTill12oclock() {
+		var now = new Date();
+		var nowUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds(),now.getMilliseconds());
+		var twelveOclock = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 2, 0);
+		return twelveOclock - nowUtc;
+	}
+
+		// timer to refresh data when first appoitment has ended
+
 	Timer {
 		id: endFirstAppointmentTimer		// timer is started in the onCompleted() function, after that when first appoitment is ending
 		repeat: false
@@ -647,6 +743,9 @@ App {
 			readCalendars();		//get new calender update
 		}
 	}
+
+		// timer to show first notification
+
 	Timer {
 		id: notificationsTimer
 		repeat: false
@@ -655,4 +754,18 @@ App {
 			sendNotification();
 		}
 	}
+
+		// timer to refresh labels at midnight (especially for the date label in dimstate (vandaag, morgen, overmorgen)
+
+	Timer {
+		id: midnightTimer
+		repeat: true
+		running: false
+		onTriggered: {
+			processCollectedCalendarDates();
+			interval = getMSecTill12oclock(); 
+			start();
+		}
+	}
+
 }
