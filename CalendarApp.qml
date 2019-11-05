@@ -1,4 +1,4 @@
-import QtQuick 1.1
+import QtQuick 2.1
 import qb.components 1.0
 import qb.base 1.0
 import FileIO 1.0
@@ -15,7 +15,7 @@ App {
 	property url calendarListDatesScreenUrl : "CalendarListDatesScreen.qml"
 	property CalendarConfigurationScreen calendarConfigurationScreen 
 	property url calendarConfigurationScreenUrl : "CalendarConfigurationScreen.qml"
-	property url thumbnailIcon: "./drawables/calendar.png"
+	property url thumbnailIcon: "qrc:/tsc/calendar.png"
 
 	// values to show on the tile for the next three appointments
 
@@ -45,20 +45,21 @@ App {
 	property variant calendarSettingsJson : {
 		'ShowNotifications': "Yes",
 		'ShowColors': "Yes",
-		'Calendar_URL': []
+		'Calendar_URL': ["https://calendar.google.com/calendar/ical/nl.dutch%23holiday%40group.v.calendar.google.com/public/basic.ics"]
 	}
+
 	property int numberOfCalendersToRead		// to keep track whether I am done with processing of the last calender
 
 	FileIO {
 		id: userSettingsFile
-		source: "file:///qmf/qml/apps/calendar/userSettings.json"
+		source: "file:///mnt/data/tsc/calendar.userSettings.json"
  	}
 
 	function init() {
 		registry.registerWidget("tile", tileUrl, this, null, {thumbLabel: "Kalender", thumbIcon: thumbnailIcon, thumbCategory: "general", thumbWeight: 30, baseTileWeight: 10, thumbIconVAlignment: "center"});
 		registry.registerWidget("screen", calendarListDatesScreenUrl, this, "calendarListDatesScreen");
 		registry.registerWidget("screen", calendarConfigurationScreenUrl, this, "calendarConfigurationScreen");
-		notifications.registerType("kalender", notifications.prio_HIGHEST, Qt.resolvedUrl("./drawables/notification-update.svg"), calendarListDatesScreenUrl , {"categoryUrl": calendarListDatesScreenUrl }, "Kalender notificaties");
+		notifications.registerType("kalender", notifications.prio_HIGHEST, Qt.resolvedUrl("qrc:/tsc/notification-update.svg"), calendarListDatesScreenUrl , {"categoryUrl": calendarListDatesScreenUrl }, "Kalender notificaties");
 		notifications.registerSubtype("kalender", "herinnering", calendarListDatesScreenUrl , {"categoryUrl": calendarListDatesScreenUrl });
 	}
 
@@ -107,7 +108,7 @@ App {
 			"Calendar_URL" : calendarSettingsJson['Calendar_URL']
 		}
   		var doc3 = new XMLHttpRequest();
-   		doc3.open("PUT", "file:///HCBv2/qml/apps/calendar/userSettings.json");
+   		doc3.open("PUT", "file:///mnt/data/tsc/calendar.userSettings.json");
    		doc3.send(JSON.stringify(tmpcalendarSettingsJson));
 	}
 

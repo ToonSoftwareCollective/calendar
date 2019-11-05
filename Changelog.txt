@@ -1,3 +1,6 @@
+1.1.5
+- store settings in /mnt/data/tsc folder
+
 1.1.4
 -firmware 5.2 compatibilty
 
