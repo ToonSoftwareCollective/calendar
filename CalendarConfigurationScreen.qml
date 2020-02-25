@@ -11,6 +11,7 @@ Screen {
 		addCustomTopRightButton("Opslaan");
 		enableNotificationsToggle.isSwitchedOn = (app.showNotificationSetting == "Yes");
 		enableColorsToggle.isSwitchedOn = (app.showColorsSetting == "Yes");
+		enableDimExtendedToggle.isSwitchedOn = (app.showDimTileExtended == "Yes");
 		urlModel.clear();
 
 		for (var i = 0; i < app.calendarSettingsJson['Calendar_URL'].length; i++) {
@@ -91,11 +92,43 @@ Screen {
 	}
 
 	Text {
-		id: urlListLabel
-		text: "Ingelezen kalenders:"
+		id: enableDimExtendedLabel
+		width: isNxt ? 750 : 600
+		height: isNxt ? 44 : 35
+		text: "Drie afspraken op tegel in dim stand?"
 		anchors {
 			left: enableColorsLabel.left
 			top: enableColorsLabel.bottom
+			topMargin : 30
+		}
+		font {
+			family: qfont.regular.name
+			pixelSize: isNxt ? 25 : 20
+		}
+	}
+
+	OnOffToggle {
+		id: enableDimExtendedToggle
+		height: isNxt ? 45 : 36
+		anchors.left: enableDimExtendedLabel.right
+		anchors.leftMargin: 10
+		anchors.top: enableDimExtendedLabel.top
+		leftIsSwitchedOn: false
+		onSelectedChangedByUser: {
+			if (isSwitchedOn) {
+				app.showDimTileExtended = "Yes"
+			} else {
+				app.showDimTileExtended = "No"
+			}
+		}
+	}
+
+	Text {
+		id: urlListLabel
+		text: "Ingelezen kalenders:"
+		anchors {
+			left: enableDimExtendedLabel.left
+			top: enableDimExtendedLabel.bottom
 			topMargin : 30
 		}
 		font {

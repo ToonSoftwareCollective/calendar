@@ -42,9 +42,11 @@ App {
 	property bool showNotification			// is there a notification to show
 	property string showNotificationSetting : "Yes"	// parameters from the userSettings.json file
 	property string showColorsSetting : "Yes"	// parameters from the userSettings.json file
+	property string showDimTileExtended: "No"	// parameters from the userSettings.json file
 	property variant calendarSettingsJson : {
 		'ShowNotifications': "Yes",
 		'ShowColors': "Yes",
+		'DimTileExtended': "No",
 		'Calendar_URL': ["https://calendar.google.com/calendar/ical/nl.dutch%23holiday%40group.v.calendar.google.com/public/basic.ics"]
 	}
 
@@ -67,6 +69,17 @@ App {
 		endFirstAppointmentTimer.start();	// kickoff timer for the first processing (delayed start of the app to allow Toon's to complete the boot process)
 		midnightTimer.interval = getMSecTill12oclock();
 		midnightTimer.start();
+
+		// read settings
+
+		try {
+			calendarSettingsJson = JSON.parse(userSettingsFile.read());
+			showNotificationSetting = calendarSettingsJson['ShowNotifications'];
+			showColorsSetting = calendarSettingsJson['ShowColors'];
+			showDimTileExtended = calendarSettingsJson['DimTileExtended'];
+		} catch(e) {
+		}
+
 	}
 
 	function sendNotification() {
@@ -105,6 +118,7 @@ App {
  		var tmpcalendarSettingsJson = {
 			"ShowNotifications" : showNotificationSetting,
 			"ShowColors" : showColorsSetting,
+			"DimTileExtended" : showDimTileExtended,
 			"Calendar_URL" : calendarSettingsJson['Calendar_URL']
 		}
   		var doc3 = new XMLHttpRequest();
@@ -125,6 +139,7 @@ App {
 			calendarSettingsJson = JSON.parse(userSettingsFile.read());
 			showNotificationSetting = calendarSettingsJson['ShowNotifications'];
 			showColorsSetting = calendarSettingsJson['ShowColors'];
+			showDimTileExtended = calendarSettingsJson['DimTileExtended'];
 		} catch(e) {
 		}
 
@@ -572,7 +587,7 @@ App {
 		textNotification = "";
 		var counter = 0;
 		var i = 0;
-		offsetNoticationTimer = 9007199254740992; //max value
+		offsetNoticationTimer = 21600000; // 6 hours, default refresh interval or earlier when first appointment ends before
 		var endDate = new Date();
 		var nowDate = new Date();
 		var calendarfile= new XMLHttpRequest();
@@ -736,7 +751,7 @@ App {
 		// timer to refresh data when first appoitment has ended
 
 	Timer {
-		id: endFirstAppointmentTimer		// timer is started in the onCompleted() function, after that when first appoitment is ending
+		id: endFirstAppointmentTimer		// timer is started in the onCompleted() function, after that when first appointment is ending or every 6 hours
 		repeat: false
 		running: false
 		interval: isNxt ? 20000 : 150000	//wait 20 sec (Toon 2) or 150 ec (Toon 1) after reboot before reading ics file for the first time

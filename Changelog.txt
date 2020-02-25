@@ -1,3 +1,7 @@
+1.1.6
+- calendars are refreshed at least every 6 hours (or earlier when first appointment ends)
+- option added to show first three appointments in dim state as well
+
 1.1.5
 - store settings in /mnt/data/tsc folder
 

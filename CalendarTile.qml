@@ -87,7 +87,7 @@ Tile {
 			pixelSize: isNxt ? 22 : 18
 		}
 		color: colors.waTileTextColor
-       		visible: !dimState
+       		visible: !dimState || (app.showDimTileExtended == "Yes")
 	}
 
 	Text {
@@ -103,7 +103,7 @@ Tile {
 			pixelSize: isNxt ? 18 : 15
 		}
 		color: colors.clockTileColor
-        	visible: !dimState
+        	visible: !dimState || (app.showDimTileExtended == "Yes")
 	}
 
 	Text {
@@ -119,7 +119,7 @@ Tile {
 			pixelSize: isNxt ? 22 : 18
 		}
 		color: colors.waTileTextColor
-       		visible: !dimState
+       		visible: !dimState || (app.showDimTileExtended == "Yes")
 	}
 
 	Text {
@@ -135,7 +135,7 @@ Tile {
 			pixelSize: isNxt ? 18 : 15
 		}
 		color: colors.clockTileColor
-        	visible: !dimState
+        	visible: !dimState || (app.showDimTileExtended == "Yes")
 	}
 
 	Text {
@@ -151,7 +151,7 @@ Tile {
 			pixelSize: isNxt ? 22 : 18
 		}
 		color: colors.waTileTextColor
-       	visible: !dimState
+       		visible: !dimState || (app.showDimTileExtended == "Yes")
 	}
 
 	Text {
@@ -167,7 +167,7 @@ Tile {
 			pixelSize: isNxt ? 18 : 15
 		}
 		color: colors.clockTileColor
-        	visible: !dimState
+        	visible: !dimState || (app.showDimTileExtended == "Yes")
 	}
 
 // DIM state fields
@@ -185,7 +185,7 @@ Tile {
 			pixelSize: isNxt ? 22 : 18
 		}
 		color: colors.waTileTextColor
-       		visible: dimState
+       		visible: dimState && (app.showDimTileExtended == "No")
 	}
 
 	Text {
@@ -201,7 +201,7 @@ Tile {
 			pixelSize: isNxt ? 22 : 18
 		}
 		color: colors.waTileTextColor
-       		visible: dimState
+       		visible: dimState && (app.showDimTileExtended == "No")
 	}
 
 	Text {
@@ -217,7 +217,7 @@ Tile {
 			pixelSize: isNxt ? 22 : 18
 		}
 		color: colors.clockTileColor
-        	visible: dimState
+        	visible: dimState && (app.showDimTileExtended == "No")
 	}
 
 }
