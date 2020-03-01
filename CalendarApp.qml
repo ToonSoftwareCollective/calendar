@@ -732,11 +732,20 @@ App {
 		var now = new Date();
 		var nowUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds(),now.getMilliseconds());
 		var endAppointment = Date.UTC(endDateFirstAppointment.slice(0,4), endDateFirstAppointment.slice(5,7) - 1, endDateFirstAppointment.slice(8,10), endDateFirstAppointment.slice(11,13), endDateFirstAppointment.slice(14,16), 1, 0);
-		if ((endAppointment - nowUtc) < 60000) {
-			return 60000;	// minimal refresh interval is one minute
+
+		// at least refresh every 6 hours
+
+		if ((endAppointment - nowUtc) > 21600000) {
+			return 21600000;
+		}
+
+		if ((endAppointment - nowUtc) < 120000) {
+			return 120000;	// minimal refresh interval is two minutes
 		} else {
 			return endAppointment - nowUtc;
 		}
+		
+		
 	}
 
 		// calculates miliseconds till 00:00:02 to update date label on the tile in dim state
