@@ -42,6 +42,7 @@ App {
 	property bool showNotification			// is there a notification to show
 	property string showNotificationSetting : "Yes"	// parameters from the userSettings.json file
 	property string showColorsSetting : "Yes"	// parameters from the userSettings.json file
+	property string showAnimationSetting : "No"	// parameters from the userSettings.json file
 	property string showDimTileExtended: "No"	// parameters from the userSettings.json file
 	property variant calendarSettingsJson : {
 		'ShowNotifications': "Yes",
@@ -118,6 +119,7 @@ App {
  		var tmpcalendarSettingsJson = {
 			"ShowNotifications" : showNotificationSetting,
 			"ShowColors" : showColorsSetting,
+			"ShowAnimation" : showAnimationSetting,
 			"DimTileExtended" : showDimTileExtended,
 			"Calendar_URL" : calendarSettingsJson['Calendar_URL']
 		}
@@ -140,6 +142,7 @@ App {
 			showNotificationSetting = calendarSettingsJson['ShowNotifications'];
 			showColorsSetting = calendarSettingsJson['ShowColors'];
 			showDimTileExtended = calendarSettingsJson['DimTileExtended'];
+			showAnimationSetting = calendarSettingsJson['ShowAnimation'];
 		} catch(e) {
 		}
 
@@ -592,6 +595,7 @@ App {
 		var nowDate = new Date();
 		var calendarfile= new XMLHttpRequest();
 		showNotification = false;
+ 		animationscreen.animationRunning= false;
 
 		var response = calendarDatesString.split("\n");
 
@@ -610,6 +614,18 @@ App {
 						showNotification = true;
 					}
 				}
+
+					// check whether there is a yearly recurring appointment today (assume it is a birthday) to activate the balloon animation
+
+				if ((response[i].slice(0, 10) == nowFormatted().substring(0,10)) && (response[i].slice(57, 60) == "(j)") && (showAnimationSetting == "Yes")) {
+					if ((response[i].slice(11, 16) <= nowFormatted().substring(11,16)) && (response[i].slice(57, 60) == "(j)") && (showAnimationSetting == "Yes")) {
+           					animationscreen.qmlAnimationURL= "https://raw.githubusercontent.com/ToonSoftwareCollective/toonanimations/master/Balloon.qml";
+            					animationscreen.animationInterval= isNxt ? 4500 : 10000;
+           					animationscreen.isVisibleinDimState= true	
+           					animationscreen.animationRunning= true;
+					}
+				}
+
 				if (counter < 20) {
 					calendarListDates = calendarListDates + addCalendarListEntry(response[i]);
 				}

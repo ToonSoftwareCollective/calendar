@@ -11,6 +11,7 @@ Screen {
 		addCustomTopRightButton("Opslaan");
 		enableNotificationsToggle.isSwitchedOn = (app.showNotificationSetting == "Yes");
 		enableColorsToggle.isSwitchedOn = (app.showColorsSetting == "Yes");
+		enableAnimationToggle.isSwitchedOn = (app.showAnimationSetting == "Yes");
 		enableDimExtendedToggle.isSwitchedOn = (app.showDimTileExtended == "Yes");
 		urlModel.clear();
 
@@ -67,7 +68,7 @@ Screen {
 		anchors {
 			left: enableNotificationsLabel.left
 			top: enableNotificationsLabel.bottom
-			topMargin : 30
+			topMargin : 15
 		}
 		font {
 			family: qfont.regular.name
@@ -99,7 +100,7 @@ Screen {
 		anchors {
 			left: enableColorsLabel.left
 			top: enableColorsLabel.bottom
-			topMargin : 30
+			topMargin : 15
 		}
 		font {
 			family: qfont.regular.name
@@ -124,11 +125,43 @@ Screen {
 	}
 
 	Text {
+		id: enableAnimationLabel
+		width: isNxt ? 750 : 600
+		height: isNxt ? 44 : 35
+		text: "Ballonnen tonen op jaarlijkse afspraken?"
+		anchors {
+			left: enableColorsLabel.left
+			top: enableDimExtendedLabel.bottom
+			topMargin : 15
+		}
+		font {
+			family: qfont.regular.name
+			pixelSize: isNxt ? 25 : 20
+		}
+	}
+
+	OnOffToggle {
+		id: enableAnimationToggle
+		height: isNxt ? 45 : 36
+		anchors.left: enableAnimationLabel.right
+		anchors.leftMargin: 10
+		anchors.top: enableAnimationLabel.top
+		leftIsSwitchedOn: false
+		onSelectedChangedByUser: {
+			if (isSwitchedOn) {
+				app.showAnimationSetting = "Yes"
+			} else {
+				app.showAnimationSetting = "No"
+			}
+		}
+	}
+
+	Text {
 		id: urlListLabel
 		text: "Ingelezen kalenders:"
 		anchors {
 			left: enableDimExtendedLabel.left
-			top: enableDimExtendedLabel.bottom
+			top: enableAnimationLabel.bottom
 			topMargin : 30
 		}
 		font {
