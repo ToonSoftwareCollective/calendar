@@ -170,7 +170,6 @@ App {
 	function readGoogleCalendar(calendarURL, indexCal) {		// function to read a single ICS calendar file
 
 		// console message
-		console.log ("********** reading calendar " + indexCal + "-" + calendarURL);
 
 		// bunch of meaningless counters
 
@@ -265,13 +264,12 @@ App {
 						}
 
 						if (aNode.substring(h+8, h+18) == "VALUE=DATE") {  // full day events, no time provided
-							var tmp = convertDateToLocale(aNode.substring(i+1, i+5), aNode.substring(i+5, i+7), aNode.substring(i+7, i+9), "12", "00", recurrenceTxt, correctionUTC);
+							var tmp = convertDateToLocale(aNode.substring(i+1, i+5), aNode.substring(i+5, i+7), aNode.substring(i+7, i+9), "12", "00", recurrenceTxt, correctionUTC, "Yes");
 							dateFrom = tmp.substring(0,10) + "T00:00";
-							var tmp2 = convertDateToLocale(aNode.substring(i+1, i+5), aNode.substring(i+5, i+7), aNode.substring(i+7, i+9), "12", "00", recurrenceTxt, correctionUTC);
-							dateTo = tmp2.substring(0,10) + "T23:59";
+							dateTo = tmp.substring(0,10) + "T23:59";
 						} else {
-							dateFrom = convertDateToLocale(aNode.substring(i+1, i+5), aNode.substring(i+5, i+7), aNode.substring(i+7, i+9), aNode.substring(i+10, i+12), aNode.substring(i+12, i+14), recurrenceTxt, correctionUTC);
-							dateTo = convertDateToLocale(aNode.substring(j+1, j+5), aNode.substring(j+5, j+7), aNode.substring(j+7, j+9), aNode.substring(j+10, j+12), aNode.substring(j+12, j+14), recurrenceTxt, correctionUTC);
+							dateFrom = convertDateToLocale(aNode.substring(i+1, i+5), aNode.substring(i+5, i+7), aNode.substring(i+7, i+9), aNode.substring(i+10, i+12), aNode.substring(i+12, i+14), recurrenceTxt, correctionUTC, "No");
+							dateTo = convertDateToLocale(aNode.substring(j+1, j+5), aNode.substring(j+5, j+7), aNode.substring(j+7, j+9), aNode.substring(j+10, j+12), aNode.substring(j+12, j+14), recurrenceTxt, correctionUTC, "No");
 						}
 
 							// only store in the array if end date of appointment is in the future, add (*) for recurring items to the title
@@ -354,7 +352,7 @@ App {
 	}
 
 
-	function convertDateToLocale(strYear, strMonth, strDay, strHour, strMinutes, recurrenceTxt, correctionUTC) {
+	function convertDateToLocale(strYear, strMonth, strDay, strHour, strMinutes, recurrenceTxt, correctionUTC, allDayEvent) {
 
 		var dateLocal = new Date(strYear, parseInt(strMonth, 10) - 1, strDay, strHour, strMinutes, 0);
 
@@ -363,6 +361,15 @@ App {
 		}
 
 		var now = new Date();
+		var strMonNow = now.getMonth() + 1;
+		if (strMonNow < 10) {
+			strMonNow = "0" + strMonNow;
+		}
+		var strDayNow = now.getDate();
+		if (strDayNow < 10) {
+			strDayNow = "0" + strDayNow;
+		}
+
 		var i = 0;
 		var j = 0;
 		var k = 0;
@@ -445,11 +452,20 @@ App {
 		i = recurrenceTxt.indexOf("FREQ=YEARLY");
 
 		if (i > -1 ) {
-			while ((now > dateLocal) && (recCounter > 0)) {
-				for (var j = 0; j < recInterval; j++) {
-					dateLocal.setFullYear(dateLocal.getFullYear() + 1);
+			if (allDayEvent == "Yes") {
+				while (compareNowDateLocal(now, dateLocal) && (recCounter > 0)) {
+					for (var j = 0; j < recInterval; j++) {
+						dateLocal.setFullYear(dateLocal.getFullYear() + 1);
+					}
+					recCounter = recCounter - 1;
 				}
-				recCounter = recCounter - 1;
+			} else {
+				while ((now > dateLocal) && (recCounter > 0)) {
+					for (var j = 0; j < recInterval; j++) {
+						dateLocal.setFullYear(dateLocal.getFullYear() + 1);
+					}
+					recCounter = recCounter - 1;
+				}
 			}
 		}
 
@@ -580,6 +596,27 @@ App {
 		return now.getFullYear() + "-" + strMon + "-" + strDay + "T" + strHours + ":" + strMinutes;
 	}
 
+	function compareNowDateLocal(now, dateLocal) {		// compare dates for full day events, show if on the same day
+
+		var result = false;
+		if (now.getYear() > dateLocal.getYear()) {
+			result = true;
+		} else {
+			if (now.getYear() == dateLocal.getYear()) {
+				if (now.getMonth() > dateLocal.getMonth()) {
+					result = true;
+				} else {
+					if (now.getMonth() == dateLocal.getMonth()) {
+						if (now.getDate() > dateLocal.getDate()) {
+							result = true;
+						}
+					}
+				}
+			}
+		}
+		return result;
+	}
+
 	function processCollectedCalendarDates() {
 
 		// calculate yyyy-mm-ddThh:mm for now() to ignore old entries
@@ -587,10 +624,12 @@ App {
 
 		calendarListDates = "";
 		var thisOffset = 0;
+		var thisOffset2 = 0;
 		textNotification = "";
 		var counter = 0;
 		var i = 0;
 		offsetNoticationTimer = 21600000; // 6 hours, default refresh interval or earlier when first appointment ends before
+		var offsetFirstNextAppointmentNoticationTimer = 999999999;
 		var endDate = new Date();
 		var nowDate = new Date();
 		var calendarfile= new XMLHttpRequest();
@@ -606,7 +645,7 @@ App {
 					// check for earliest notification time and text to display
 
 				if (response[i].slice(38, 53) !== "              ") {
-					endDate = new Date(Date.UTC(response[i].slice(0, 4), response[i].slice(5, 7) - 1, response[i].slice(8, 10), response[i].slice(11, 13), response[i].slice(14, 16), 0));
+					endDate = new Date(response[i].slice(0, 4), response[i].slice(5, 7) - 1, response[i].slice(8, 10), response[i].slice(11, 13), response[i].slice(14, 16), 0);
 					thisOffset = endDate - nowDate + calcAlarmOffsetInMs(response[i].slice(38, 53)) - 3600000;
 					if ((thisOffset < offsetNoticationTimer) && (thisOffset > 0)) {
 						offsetNoticationTimer = thisOffset;
@@ -614,15 +653,23 @@ App {
 						showNotification = true;
 					}
 				}
+					// set timer for start first appointment (to start animation)
 
-					// check whether there is a yearly recurring appointment today (assume it is a birthday) to activate the balloon animation
-
-				if ((response[i].slice(0, 10) == nowFormatted().substring(0,10)) && (response[i].slice(57, 60) == "(j)") && (showAnimationSetting == "Yes")) {
-					if ((response[i].slice(11, 16) <= nowFormatted().substring(11,16)) && (response[i].slice(57, 60) == "(j)") && (showAnimationSetting == "Yes")) {
-           					animationscreen.qmlAnimationURL= "https://raw.githubusercontent.com/ToonSoftwareCollective/toonanimations/master/Balloon.qml";
-            					animationscreen.animationInterval= isNxt ? 4500 : 10000;
-           					animationscreen.isVisibleinDimState= true	
-           					animationscreen.animationRunning= true;
+				if ((response[i].slice(57, 60) == "(j)")) {
+					endDate = new Date(response[i].slice(0, 4), response[i].slice(5, 7) - 1, response[i].slice(8, 10), response[i].slice(11, 13), response[i].slice(14, 16), 0);
+					thisOffset2 = endDate - nowDate;
+					if ((thisOffset2 < offsetFirstNextAppointmentNoticationTimer ) && (showAnimationSetting == "Yes")) {
+						if (thisOffset2 < 0) { // start now
+    							animationscreen.qmlAnimationURL= "https://raw.githubusercontent.com/ToonSoftwareCollective/toonanimations/master/Balloon.qml";
+    							animationscreen.animationInterval= isNxt ? 4500 : 10000;
+    							animationscreen.isVisibleinDimState= true	
+    							animationscreen.animationRunning= true;
+						} else {
+							offsetFirstNextAppointmentNoticationTimer = thisOffset2;
+ 							startAnimationTimer.stop();
+							startAnimationTimer.interval = thisOffset2;
+							startAnimationTimer.start();
+						}
 					}
 				}
 
@@ -776,11 +823,24 @@ App {
 		// timer to refresh data when first appoitment has ended
 
 	Timer {
+		id: startAnimationTimer
+		repeat: false
+		running: false
+		onTriggered: {
+    			animationscreen.qmlAnimationURL= "https://raw.githubusercontent.com/ToonSoftwareCollective/toonanimations/master/Balloon.qml";
+    			animationscreen.animationInterval= isNxt ? 4500 : 10000;
+    			animationscreen.isVisibleinDimState= true	
+    			animationscreen.animationRunning= true;
+		}
+	}
+
+	Timer {
 		id: endFirstAppointmentTimer		// timer is started in the onCompleted() function, after that when first appointment is ending or every 6 hours
 		repeat: false
 		running: false
 		interval: isNxt ? 20000 : 150000	//wait 20 sec (Toon 2) or 150 ec (Toon 1) after reboot before reading ics file for the first time
 		onTriggered: {
+   			animationscreen.animationRunning= false;
 			readCalendars();		//get new calender update
 		}
 	}

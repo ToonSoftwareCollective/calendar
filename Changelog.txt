@@ -1,3 +1,8 @@
+1.1.10
+- further improved the balloon animation functionality for full day yearly events (final now)
+  balloons will show from 00:02 to 23:59 during the day for all day events.
+- Yearly all day events are now also visible after a gui-restart during the that day
+
 1.1.9
 - added option to show balloons on days with yearly recurring appointments.
   (assuming these are birthdays, option can be enabled in the settings screen) 
