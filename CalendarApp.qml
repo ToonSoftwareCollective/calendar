@@ -31,6 +31,7 @@ App {
 	property string calendarDate1Color
 	property string calendarDate2Color
 	property string calendarDate3Color
+	property bool animationStarted : false
 
 
 	// other variables
@@ -634,7 +635,6 @@ App {
 		var nowDate = new Date();
 		var calendarfile= new XMLHttpRequest();
 		showNotification = false;
- 		animationscreen.animationRunning= false;
 
 		var response = calendarDatesString.split("\n");
 
@@ -664,12 +664,22 @@ App {
     							animationscreen.animationInterval= isNxt ? 4500 : 10000;
     							animationscreen.isVisibleinDimState= true	
     							animationscreen.animationRunning= true;
+							animationStarted = true;
 						} else {
 							offsetFirstNextAppointmentNoticationTimer = thisOffset2;
  							startAnimationTimer.stop();
 							startAnimationTimer.interval = thisOffset2;
 							startAnimationTimer.start();
+							if (animationStarted) {  // switch off animation if we started it before
+ 		  						animationscreen.animationRunning= false;
+								animationStarted = false;
+							}
 						}
+					}
+				} else {
+					if (animationStarted) {  // switch off animation if we started it before
+   						animationscreen.animationRunning= false;
+						animationStarted = false;
 					}
 				}
 
@@ -831,6 +841,7 @@ App {
     			animationscreen.animationInterval= isNxt ? 4500 : 10000;
     			animationscreen.isVisibleinDimState= true	
     			animationscreen.animationRunning= true;
+			animationStarted = true;
 		}
 	}
 
@@ -840,7 +851,6 @@ App {
 		running: false
 		interval: isNxt ? 20000 : 150000	//wait 20 sec (Toon 2) or 150 ec (Toon 1) after reboot before reading ics file for the first time
 		onTriggered: {
-   			animationscreen.animationRunning= false;
 			readCalendars();		//get new calender update
 		}
 	}

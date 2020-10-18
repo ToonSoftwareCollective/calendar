@@ -152,6 +152,10 @@ Screen {
 				app.showAnimationSetting = "Yes"
 			} else {
 				app.showAnimationSetting = "No"
+				if (app.animationStarted) {  // switch off animation if we started it before
+   					animationscreen.animationRunning= false;
+					app.animationStarted = false;
+				}
 			}
 		}
 	}

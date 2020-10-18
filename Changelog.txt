@@ -1,3 +1,9 @@
+1.1.11
+- balloon animations are only stopped if this app started them.
+  this to prevent accidentally killing animations from other apps.
+- when switching the setting on showing animations to 'off' the current animation will be stopped
+  if it was started by this app
+
 1.1.10
 - further improved the balloon animation functionality for full day yearly events (final now)
   balloons will show from 00:02 to 23:59 during the day for all day events.
