@@ -13,6 +13,7 @@ Screen {
 		enableColorsToggle.isSwitchedOn = (app.showColorsSetting == "Yes");
 		enableAnimationToggle.isSwitchedOn = (app.showAnimationSetting == "Yes");
 		enableDimExtendedToggle.isSwitchedOn = (app.showDimTileExtended == "Yes");
+		refreshIntervalLabel.inputText = app.refreshIntervalInMinutes;
 		urlModel.clear();
 
 		for (var i = 0; i < app.calendarSettingsJson['Calendar_URL'].length; i++) {
@@ -27,9 +28,29 @@ Screen {
 		app.saveSettings();
 	}
 
+	function saveRefreshIntervalLabel(text) {
+
+		if (text) {
+			app.refreshIntervalInMinutes = parseInt(text);
+			refreshIntervalLabel.inputText = app.refreshIntervalInMinutes;
+		}
+	}
+
+
+	function validateRefreshIntervalLabel(text, isFinalString) {
+		if (isFinalString) {
+			if (parseInt(text) > 9)
+				return null;
+			else
+				return {title: "Ongeldige invoer", content: "aantal minuten moet minimaal 10 zijn"};
+		}
+		return null;
+	}
+
+
 	Text {
 		id: enableNotificationsLabel
-		width: isNxt ? 750 : 600
+		width: isNxt ? 500 : 400
 		height: isNxt ? 44 : 35
 		text: "Afspraak reminders weergeven als notificaties?"
 		anchors {
@@ -40,8 +61,7 @@ Screen {
 		}
 		font {
 			family: qfont.regular.name
-			pixelSize: isNxt ? 25 : 20
-		}
+			pixelSize: isNxt ? 20 : 15		}
 	}
 
 	OnOffToggle {
@@ -62,18 +82,17 @@ Screen {
 
 	Text {
 		id: enableColorsLabel
-		width: isNxt ? 750 : 600
+		width: isNxt ? 500 : 400
 		height: isNxt ? 44 : 35
 		text: "Kleuren per kalender weergeven bij afspraken?"
 		anchors {
 			left: enableNotificationsLabel.left
 			top: enableNotificationsLabel.bottom
-			topMargin : 15
+			topMargin : 10
 		}
 		font {
 			family: qfont.regular.name
-			pixelSize: isNxt ? 25 : 20
-		}
+			pixelSize: isNxt ? 20 : 15		}
 	}
 
 	OnOffToggle {
@@ -94,18 +113,17 @@ Screen {
 
 	Text {
 		id: enableDimExtendedLabel
-		width: isNxt ? 750 : 600
+		width: isNxt ? 500 : 400
 		height: isNxt ? 44 : 35
 		text: "Drie afspraken op tegel in dim stand?"
 		anchors {
 			left: enableColorsLabel.left
 			top: enableColorsLabel.bottom
-			topMargin : 15
+			topMargin : 10
 		}
 		font {
 			family: qfont.regular.name
-			pixelSize: isNxt ? 25 : 20
-		}
+			pixelSize: isNxt ? 20 : 15		}
 	}
 
 	OnOffToggle {
@@ -126,18 +144,17 @@ Screen {
 
 	Text {
 		id: enableAnimationLabel
-		width: isNxt ? 750 : 600
+		width: isNxt ? 500 : 400
 		height: isNxt ? 44 : 35
 		text: "Ballonnen tonen op jaarlijkse afspraken?"
 		anchors {
 			left: enableColorsLabel.left
 			top: enableDimExtendedLabel.bottom
-			topMargin : 15
+			topMargin : 10
 		}
 		font {
 			family: qfont.regular.name
-			pixelSize: isNxt ? 25 : 20
-		}
+			pixelSize: isNxt ? 20 : 15		}
 	}
 
 	OnOffToggle {
@@ -160,18 +177,37 @@ Screen {
 		}
 	}
 
+	EditTextLabel4421 {
+		id: refreshIntervalLabel
+		width: isNxt ? 575 : 460
+		height: isNxt ? 44 : 35
+		leftTextAvailableWidth: isNxt ? 500 : 400
+		leftText: "Ververs interval in minuten:"
+
+		anchors {
+			left: enableColorsLabel.left
+			top: enableAnimationLabel.bottom
+			topMargin : 10
+		}
+
+		onClicked: {
+			qnumKeyboard.open("Voer het aantal minuten in:", refreshIntervalLabel.inputText, app.refreshIntervalLabel, 1 , saveRefreshIntervalLabel, validateRefreshIntervalLabel);
+			qnumKeyboard.maxTextLength = 2;
+			qnumKeyboard.state = "num_integer_clear_backspace";
+		}
+	}
+
 	Text {
 		id: urlListLabel
 		text: "Ingelezen kalenders:"
 		anchors {
-			left: enableDimExtendedLabel.left
-			top: enableAnimationLabel.bottom
+			left: refreshIntervalLabel.left
+			top: refreshIntervalLabel.bottom
 			topMargin : 30
 		}
 		font {
 			family: qfont.regular.name
-			pixelSize: isNxt ? 25 : 20
-		}
+			pixelSize: isNxt ? 20 : 15		}
 	}
 
 	Rectangle {

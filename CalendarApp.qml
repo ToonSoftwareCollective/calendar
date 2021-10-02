@@ -45,10 +45,12 @@ App {
 	property string showColorsSetting : "Yes"	// parameters from the userSettings.json file
 	property string showAnimationSetting : "No"	// parameters from the userSettings.json file
 	property string showDimTileExtended: "No"	// parameters from the userSettings.json file
+	property int refreshIntervalInMinutes: 60	// parameters from the userSettings.json file
 	property variant calendarSettingsJson : {
 		'ShowNotifications': "Yes",
 		'ShowColors': "Yes",
 		'DimTileExtended': "No",
+		'RefreshIntervalInMinutes': 60,
 		'Calendar_URL': ["https://calendar.google.com/calendar/ical/nl.dutch%23holiday%40group.v.calendar.google.com/public/basic.ics"]
 	}
 
@@ -79,6 +81,7 @@ App {
 			showNotificationSetting = calendarSettingsJson['ShowNotifications'];
 			showColorsSetting = calendarSettingsJson['ShowColors'];
 			showDimTileExtended = calendarSettingsJson['DimTileExtended'];
+			refreshIntervalInMinutes = calendarSettingsJson['RefreshIntervalInMinutes'];
 		} catch(e) {
 		}
 
@@ -122,6 +125,7 @@ App {
 			"ShowColors" : showColorsSetting,
 			"ShowAnimation" : showAnimationSetting,
 			"DimTileExtended" : showDimTileExtended,
+			"RefreshIntervalInMinutes" : refreshIntervalInMinutes,
 			"Calendar_URL" : calendarSettingsJson['Calendar_URL']
 		}
   		var doc3 = new XMLHttpRequest();
@@ -144,6 +148,7 @@ App {
 			showColorsSetting = calendarSettingsJson['ShowColors'];
 			showDimTileExtended = calendarSettingsJson['DimTileExtended'];
 			showAnimationSetting = calendarSettingsJson['ShowAnimation'];
+			if (calendarSettingsJson['RefreshIntervalInMinutes']) refreshIntervalInMinutes  = calendarSettingsJson['RefreshIntervalInMinutes'] ;
 		} catch(e) {
 		}
 
@@ -806,14 +811,14 @@ App {
 		var nowUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds(),now.getMilliseconds());
 		var endAppointment = Date.UTC(endDateFirstAppointment.slice(0,4), endDateFirstAppointment.slice(5,7) - 1, endDateFirstAppointment.slice(8,10), endDateFirstAppointment.slice(11,13), endDateFirstAppointment.slice(14,16), 1, 0);
 
-		// at least refresh every 6 hours
+		// at least refresh every refresh cycle
 
-		if ((endAppointment - nowUtc) > 21600000) {
-			return 21600000;
+		if ((endAppointment - nowUtc) > (60000 * refreshIntervalInMinutes)) {
+			return 60000 * refreshIntervalInMinutes;
 		}
 
-		if ((endAppointment - nowUtc) < 120000) {
-			return 120000;	// minimal refresh interval is two minutes
+		if ((endAppointment - nowUtc) < 300000) {
+			return 300000;	// minimal refresh interval is 5 minutes
 		} else {
 			return endAppointment - nowUtc;
 		}
