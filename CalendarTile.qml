@@ -6,6 +6,7 @@ Tile {
 	id: wastecollectionTile
 
 	property bool dimState: screenStateController.dimmedColors
+	property int maxlength: isNxt ? 25 : 24
 
 	onClicked: {
 		if (app.calendarListDatesScreen)
@@ -13,8 +14,9 @@ Tile {
 	}
 
 	function formatTitle(title) {
-		if (title.length > 25) {
-		return title.substring(0,25) + "...";
+		
+		if (title.length > maxlength) {
+		return title.substring(0,maxlength) + "...";
 		} else {
 			return title;
 		}
