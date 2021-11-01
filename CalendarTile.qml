@@ -12,6 +12,13 @@ Tile {
 			app.calendarListDatesScreen.show();
 	}
 
+	function formatTitle(title) {
+		if (title.length > 25) {
+		return title.substring(0,25) + "...";
+		} else {
+			return title;
+		}
+	}
 	
 	Text {
 		id: tiletitle
@@ -75,7 +82,7 @@ Tile {
 
 	Text {
 		id: calendardatenext
-		text: app.calendarDateNext1Label
+		text: formatTitle(app.calendarDateNext1Label)
 		anchors {
 			baseline: parent.top
 			baselineOffset: isNxt ? 62 : 50
@@ -108,7 +115,7 @@ Tile {
 
 	Text {
 		id: calendardatenext2
-		text: app.calendarDateNext2Label
+		text: formatTitle(app.calendarDateNext2Label)
 		anchors {
 			baseline: calendardatenexttype.bottom
 			baselineOffset: isNxt ? 25 : 20
@@ -140,7 +147,7 @@ Tile {
 
 	Text {
 		id: calendardatenext3
-		text: app.calendarDateNext3Label
+		text: formatTitle(app.calendarDateNext3Label)
 		anchors {
 			baseline: calendardatenext2type.bottom
 			baselineOffset: isNxt ? 25 : 20
@@ -174,7 +181,7 @@ Tile {
 
 	 Text {
 		id: calendardatenextDimText
- 		text: app.calendarDateNext1LabelDim
+ 		text: formatTitle(app.calendarDateNext1LabelDim)
 		anchors {
 			baseline: parent.top
 			baselineOffset: isNxt ? 62 : 50
@@ -219,5 +226,4 @@ Tile {
 		color: (typeof dimmableColors !== 'undefined') ? dimmableColors.clockTileColor : colors.clockTileColor
         	visible: dimState && (app.showDimTileExtended == "No")
 	}
-
 }
