@@ -1,3 +1,6 @@
+1.1.13
+- limit meeting titles to 25 characters on the tile
+
 1.1.12
 - made the refresh cycle configurable
 
