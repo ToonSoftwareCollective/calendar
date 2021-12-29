@@ -6,6 +6,14 @@ Rectangle
 	width: parent.width
 	color: colors.canvas
 
+	function formatTitle() {
+		if (appointmentTitle.length > 38) {
+			return appointmentTitle.substring(0,38)
+		} else {
+			return appointmentTitle
+		}
+	}
+
 	Rectangle {
 		id: colorBar
 		height: isNxt ? 53 : 42
@@ -35,7 +43,7 @@ Rectangle
 
 	Text {
 		id: labelTitle
-		text: appointmentTitle
+		text: formatTitle()
 		anchors {
 			top: colorBar.top
 			left: labelDate.right

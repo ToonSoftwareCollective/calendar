@@ -1,3 +1,9 @@
+1.1.15
+- added public calendar repository for easy adding of calendars in the settings screen.
+  Currently F1 calendars are added.
+  if you have suggestions for extra public calendars, drop me a note on domoticaforum.eu
+- limit the length of appointments on the main screen to avoid overlap between columns
+
 1.1.14
 - limit meeting titles to 25 characters on the tile
 
