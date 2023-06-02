@@ -240,7 +240,7 @@ App {
 						if ((n > 0) && (n < m)) {	// process reminder
 							o = aNode.indexOf("TRIGGER", n);
 							if ((o > 0) && (o < m)) {		//trigger for this event
-								triggerTxt = aNode.substring(o+8, aNode.indexOf("END:VALARM", o) - 2) + "              ";
+								triggerTxt = aNode.substring(o+8, aNode.indexOf("\n", o)) + "              ";
 							}
 						}
 						triggerTxt = triggerTxt.substring(0, 15);
