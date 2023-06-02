@@ -1,3 +1,6 @@
+1.1.16
+- properly handle recent minor change in google export format
+
 1.1.15
 - added public calendar repository for easy adding of calendars in the settings screen.
   Currently F1 calendars are added.
